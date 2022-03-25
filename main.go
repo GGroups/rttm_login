@@ -32,6 +32,7 @@ func buildDB() error {
 	} else if err != nil {
 		return err
 	}
+
 	db.Close()
 
 	return nil
