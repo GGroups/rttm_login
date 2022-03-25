@@ -8,11 +8,11 @@ import (
 	"strings"
 	"syscall"
 
+	USR "github.com/GGroups/rttm_login/user"
 	log "github.com/cihub/seelog"
 	httpTransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
-	USR "gpwm.login/user"
 )
 
 func buildDB() error {
