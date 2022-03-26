@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 
@@ -16,14 +17,17 @@ type LoginRequest struct {
 
 type EmptyReqRep struct {
 	Status string `json:"status"`
+	Msg    string `json:"msg"`
 }
 
-var okbody EmptyReqRep
-var errbody EmptyReqRep
+func OkBody() EmptyReqRep {
+	return EmptyReqRep{Status: "ok"}
+}
 
-func init() {
-	okbody = EmptyReqRep{Status: "ok"}
-	errbody = EmptyReqRep{Status: "err"}
+func EpErr(e error) error {
+	b := EmptyReqRep{Status: "err", Msg: e.Error()}
+	s, _ := json.Marshal(b)
+	return errors.New(string(s))
 }
 
 type LoginClaim struct {
@@ -46,7 +50,7 @@ func MakeLoginEndPoint(sv IUser) endpoint.Endpoint {
 		var usr Usr
 		err = sv.Login(r.Name, r.Pass, &usr)
 		if err != nil {
-			return Usr{}, err
+			return Usr{}, EpErr(err)
 		} else {
 			return usr, nil
 		}
@@ -62,7 +66,7 @@ func MakeLoginRefEndPoint(sv IUser) endpoint.Endpoint {
 
 		err = sv.LoginRef(old)
 		if err != nil {
-			return "", err
+			return "", EpErr(err)
 		} else {
 			return old, nil
 		}
@@ -73,9 +77,9 @@ func MakeReloadLoginDataEndPoint(sv IUser) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		err = sv.ReloadLoginData()
 		if err != nil {
-			return "", err
+			return "", EpErr(err)
 		} else {
-			return okbody, nil
+			return OkBody(), nil
 		}
 	}
 }

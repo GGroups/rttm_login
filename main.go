@@ -81,6 +81,10 @@ func main() {
 	creatTestRole(&USR.Role{Id: 3, Name: "导出"})
 
 	us := USR.Usr{}
+	err = us.ReloadLoginData()
+	if err != nil {
+		log.Error("#ReloadLoginData->", err.Error())
+	}
 	ep1 := USR.MakeLoginEndPoint(us)
 	ep2 := USR.MakeLoginRefEndPoint(us)
 	ep3 := USR.MakeReloadLoginDataEndPoint(us)
@@ -91,15 +95,15 @@ func main() {
 
 	routeSvr := mux.NewRouter()
 
-	routeSvr.Handle(`/rtm/Login`, svr1).Methods("POST")
-	routeSvr.Handle(`/rtm/LoginRef`, svr2).Methods("POST")
-	routeSvr.Handle(`/rtm/LoginReload`, svr3).Methods("POST")
+	routeSvr.Handle(`/rttm/login/Login`, svr1).Methods("POST")
+	routeSvr.Handle(`/rttm/login/LoginRef`, svr2).Methods("POST")
+	routeSvr.Handle(`/rttm/login/LoginReload`, svr3).Methods("POST")
 
 	//main loop
 	ch := make(chan error, 2)
 	go func() {
-		log.Info("0.0.0.0:18000", `/rtm/Login**`)
-		ch <- http.ListenAndServe("0.0.0.0:18000", routeSvr)
+		log.Info("0.0.0.0:18000", `/rttm/login/**`)
+		ch <- http.ListenAndServeTLS("0.0.0.0:18000", "./cert.pem", "./key.pem", routeSvr)
 	}()
 	go func() {
 		log.Info("##", "wait for exit sigint...")

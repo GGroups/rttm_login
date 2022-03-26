@@ -22,12 +22,12 @@ func ReLoadLoginDataDecodeRequest(c context.Context, request *http.Request) (int
 	}
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		return nil, err
+		return nil, EpErr(err)
 	}
 	var obj EmptyReqRep
 	err = json.Unmarshal(body, &obj)
 	if err != nil {
-		return nil, err
+		return nil, EpErr(err)
 	}
 	return obj, nil
 }
@@ -38,12 +38,12 @@ func LoginDecodeRequest(c context.Context, request *http.Request) (interface{}, 
 	}
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		return nil, err
+		return nil, EpErr(err)
 	}
 	var obj LoginRequest
 	err = json.Unmarshal(body, &obj)
 	if err != nil {
-		return nil, err
+		return nil, EpErr(err)
 	}
 	return obj, nil
 }
@@ -76,7 +76,7 @@ func LoginEncodeResponse(c context.Context, w http.ResponseWriter, response inte
 	// Declare the token with the algorithm used for signing, and the claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	// Create the JWT string
-	tokenString, err1 := token.SignedString(jwtKey)
+	tokenString, err1 := token.SignedString(jwt_bin_key)
 	if err1 != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err1
@@ -90,7 +90,7 @@ func LoginEncodeResponse(c context.Context, w http.ResponseWriter, response inte
 		Expires: expirationTime,
 	})
 
-	return json.NewEncoder(w).Encode(okbody)
+	return json.NewEncoder(w).Encode(OkBody())
 }
 
 func LoginRefDecodeRequest(c context.Context, request *http.Request) (interface{}, error) {
@@ -99,7 +99,7 @@ func LoginRefDecodeRequest(c context.Context, request *http.Request) (interface{
 	}
 	tokCok, err := request.Cookie("token")
 	if err != nil {
-		return "", err
+		return "", EpErr(err)
 	}
 	return tokCok.Value, nil
 }
@@ -113,15 +113,15 @@ func LoginRefEncodeResponse(c context.Context, w http.ResponseWriter, response i
 	}
 	claims := &LoginClaim{}
 	tkn, err := jwt.ParseWithClaims(tokStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+		return jwt_bin_key, nil
 	})
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
-			return err
+			return EpErr(err)
 		}
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return EpErr(err)
 	}
 	if !tkn.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -141,10 +141,10 @@ func LoginRefEncodeResponse(c context.Context, w http.ResponseWriter, response i
 	expirationTime := time.Now().Add(5 * time.Minute)
 	claims.ExpiresAt = expirationTime.Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(jwt_bin_key)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		return err
+		return EpErr(err)
 	}
 
 	// Set the new token as the users `token` cookie
@@ -154,5 +154,5 @@ func LoginRefEncodeResponse(c context.Context, w http.ResponseWriter, response i
 		Expires: expirationTime,
 	})
 
-	return json.NewEncoder(w).Encode(okbody)
+	return json.NewEncoder(w).Encode(OkBody())
 }

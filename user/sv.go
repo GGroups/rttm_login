@@ -24,14 +24,14 @@ const (
 	SQL_CRE_USER = `CREATE TABLE User ("uid" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
 	  "name" char(200) NOT NULL, 
 	  "pass" char(200) NOT NULL, 
-	  "rols" char(100) NOT NULL);`
+	  "roles" char(100) NOT NULL);`
 
-	SQL_SEL_USER = `SELECT uid, name, pass , rols FROM User; `
+	SQL_SEL_USER = `SELECT uid, name, pass , roles FROM User; `
 
-	SQL_CRE_ROLE = `CREATE TABLE Role ("uid" integer NOT NULL, "name" char(200) NOT NULL);`
+	SQL_CRE_ROLE = `CREATE TABLE Role ("uid" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" char(200) NOT NULL);`
 
 	SQL_INS_USR = `insert into User (
-	"uid",	"name", "pass", "rols") 
+	"uid",	"name", "pass", "roles") 
 	 VALUES (?,?,?,?)`
 
 	SQL_INS_ROLE = `insert into Role (
@@ -51,8 +51,8 @@ type Usr struct {
 }
 
 type Role struct {
-	Id   int    `json:"uid"`
-	Name string `json:"name"`
+	Id   int    `json:"uid" db:"uid"`
+	Name string `json:"name" db:"name"`
 }
 
 type IUser interface {
@@ -61,7 +61,7 @@ type IUser interface {
 	ReloadLoginData() error
 }
 
-var jwtKey = []byte("my_secret_key")
+var jwt_bin_key = []byte("my_secret_key")
 var users map[string]Usr
 
 func (s Usr) Login(name string, pass string, usr *Usr) error {
@@ -98,7 +98,7 @@ func (s Usr) ReloadLoginData() error {
 	for scanner.Scan() {
 		outstr += strings.TrimSpace(scanner.Text())
 	}
-	jwtKey = []byte(outstr)
+	jwt_bin_key = []byte(outstr)
 
 	//load user to map
 	db, err := sqlx.Open(LITE3, DB_FILE)
