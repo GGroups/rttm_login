@@ -42,6 +42,7 @@ func MakeLoginEndPoint(sv IUser) endpoint.Endpoint {
 		if len(r.Name) <= 0 || len(r.Pass) <= 0 {
 			return nil, errors.New(ERR_USR_PASS_EMPTY + `not "wx"`)
 		}
+
 		var usr Usr
 		err = sv.Login(r.Name, r.Pass, &usr)
 		if err != nil {
