@@ -30,6 +30,12 @@ func EpErr(e error) error {
 	return errors.New(string(s))
 }
 
+func RepErr(msg string) error {
+	b := EmptyReqRep{Status: "err", Msg: msg}
+	s, _ := json.Marshal(b)
+	return errors.New(string(s))
+}
+
 type LoginClaim struct {
 	UsrObj Usr `json:"usr"`
 	jwt.StandardClaims
@@ -44,7 +50,7 @@ func MakeLoginEndPoint(sv IUser) endpoint.Endpoint {
 		r.Name = strings.TrimSpace(r.Name)
 		r.Pass = strings.TrimSpace(r.Pass)
 		if len(r.Name) <= 0 || len(r.Pass) <= 0 {
-			return nil, errors.New(ERR_USR_PASS_EMPTY + `not "wx"`)
+			return nil, RepErr(ERR_USR_PASS_EMPTY + `not "wx"`)
 		}
 
 		var usr Usr

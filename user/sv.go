@@ -17,6 +17,7 @@ const (
 
 	ERR_TIME_TOO_LONG  = `过期时间太长`
 	ERR_DECODE_ERR     = `解码异常`
+	ERR_GETTOKEN_ERR   = `无法获取token`
 	ERR_TOKEN_LEN_ERR  = `token长度异常`
 	ERR_USR_PASS_EMPTY = `用户名或密码为空`
 	ERR_USR_PASS_ERR   = `用户名或密码错误`
@@ -72,6 +73,7 @@ func (s Usr) Login(name string, pass string, usr *Usr) error {
 	if !ok || findUsr.Pass != pass {
 		return errors.New(ERR_USR_PASS_ERR)
 	} else {
+		findUsr.Pass = "*"
 		*usr = findUsr
 	}
 

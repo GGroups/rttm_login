@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -18,7 +17,7 @@ func CommEncodeResponse(c context.Context, w http.ResponseWriter, response inter
 
 func ReLoadLoginDataDecodeRequest(c context.Context, request *http.Request) (interface{}, error) {
 	if request.Method != "POST" {
-		return nil, errors.New("#must POST")
+		return nil, RepErr("#must POST")
 	}
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -34,7 +33,7 @@ func ReLoadLoginDataDecodeRequest(c context.Context, request *http.Request) (int
 
 func LoginDecodeRequest(c context.Context, request *http.Request) (interface{}, error) {
 	if request.Method != "POST" {
-		return nil, errors.New("#must POST")
+		return nil, RepErr("#must POST")
 	}
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -53,12 +52,12 @@ func LoginEncodeResponse(c context.Context, w http.ResponseWriter, response inte
 
 	findUsr, errb := response.(Usr)
 	if !errb {
-		return errors.New(ERR_DECODE_ERR)
+		return RepErr(ERR_DECODE_ERR)
 	}
 
 	if len(findUsr.Name) <= 0 {
 		w.WriteHeader(http.StatusUnauthorized)
-		return errors.New(ERR_USR_PASS_ERR)
+		return RepErr(ERR_USR_PASS_ERR)
 	}
 
 	// Declare the expiration time of the token
@@ -95,7 +94,7 @@ func LoginEncodeResponse(c context.Context, w http.ResponseWriter, response inte
 
 func LoginRefDecodeRequest(c context.Context, request *http.Request) (interface{}, error) {
 	if request.Method != "POST" {
-		return nil, errors.New("#must POST")
+		return nil, RepErr("#must POST")
 	}
 	tokCok, err := request.Cookie("token")
 	if err != nil {
@@ -108,8 +107,8 @@ func LoginRefEncodeResponse(c context.Context, w http.ResponseWriter, response i
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 
 	tokStr, errb := response.(string)
-	if errb {
-		return errors.New(ERR_DECODE_ERR)
+	if !errb {
+		return RepErr(ERR_GETTOKEN_ERR)
 	}
 	claims := &LoginClaim{}
 	tkn, err := jwt.ParseWithClaims(tokStr, claims, func(token *jwt.Token) (interface{}, error) {
@@ -131,10 +130,10 @@ func LoginRefEncodeResponse(c context.Context, w http.ResponseWriter, response i
 
 	// We ensure that a new token is not issued until enough time has elapsed
 	// In this case, a new token will only be issued if the old token is within
-	// 30 seconds of expiry. Otherwise, return a bad request status
-	if time.Until(time.Unix(claims.ExpiresAt, 0)) > 30*time.Second {
+	// 30 minute of expiry. Otherwise, return a bad request status
+	if time.Until(time.Unix(claims.ExpiresAt, 0)) > 30*time.Minute {
 		w.WriteHeader(http.StatusBadRequest)
-		return errors.New(ERR_TIME_TOO_LONG)
+		return RepErr(ERR_TIME_TOO_LONG)
 	}
 
 	// Now, create a new token for the current use, with a renewed expiration time
