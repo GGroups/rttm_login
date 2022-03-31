@@ -25,6 +25,10 @@ const (
 	ROLE_export
 )
 
+func GetDBLite() string {
+	return SECRET_KEY
+}
+
 func GetRoleName(id int) string {
 	switch id {
 	case ROLE_addtable:

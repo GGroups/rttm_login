@@ -19,9 +19,9 @@ type RequestWarp struct {
 var secret_bin_key = []byte("my_secret_key")
 
 func init() {
-	file, err := os.Open(SECRET_KEY)
+	file, err := os.Open(GetDBLite())
 	if err != nil {
-		log.Error("#Load ", SECRET_KEY, err.Error())
+		log.Error("#Load ", GetDBLite(), err.Error())
 	}
 	defer file.Close()
 
