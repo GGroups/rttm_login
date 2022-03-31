@@ -62,7 +62,7 @@ func LoginEncodeResponse(c context.Context, w http.ResponseWriter, response inte
 
 	// Declare the expiration time of the token
 	// here, we have kept it as 5 minutes
-	expirationTime := time.Now().Add(TIME_5 * time.Minute)
+	expirationTime := time.Now().Add(TIME_5 * time.Hour)
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &LoginClaim{
 		UsrObj: findUsr,
@@ -78,7 +78,7 @@ func LoginEncodeResponse(c context.Context, w http.ResponseWriter, response inte
 	tokenString, err1 := token.SignedString(jwt_bin_key)
 	if err1 != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		return err1
+		return EpErr(err1)
 	}
 
 	// Finally, we set the client cookie for "token" as the JWT we just generated
@@ -86,10 +86,12 @@ func LoginEncodeResponse(c context.Context, w http.ResponseWriter, response inte
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
 		Value:   tokenString,
+		Path:    "/",
 		Expires: expirationTime,
 	})
 
-	return json.NewEncoder(w).Encode(OkBody())
+	findUsr.Pass = "*"
+	return json.NewEncoder(w).Encode(OkDataBody(findUsr))
 }
 
 func LoginRefDecodeRequest(c context.Context, request *http.Request) (interface{}, error) {
@@ -131,13 +133,13 @@ func LoginRefEncodeResponse(c context.Context, w http.ResponseWriter, response i
 	// We ensure that a new token is not issued until enough time has elapsed
 	// In this case, a new token will only be issued if the old token is within
 	// 30 minute of expiry. Otherwise, return a bad request status
-	if time.Until(time.Unix(claims.ExpiresAt, 0)) > 30*time.Minute {
+	if time.Until(time.Unix(claims.ExpiresAt, 0)) > TIME_5*time.Hour {
 		w.WriteHeader(http.StatusBadRequest)
 		return RepErr(ERR_TIME_TOO_LONG)
 	}
 
 	// Now, create a new token for the current use, with a renewed expiration time
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(TIME_5 * time.Hour)
 	claims.ExpiresAt = expirationTime.Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwt_bin_key)
@@ -150,8 +152,11 @@ func LoginRefEncodeResponse(c context.Context, w http.ResponseWriter, response i
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
 		Value:   tokenString,
+		Path:    "/",
 		Expires: expirationTime,
 	})
 
-	return json.NewEncoder(w).Encode(OkBody())
+	findUsr := claims.UsrObj
+	findUsr.Pass = "*"
+	return json.NewEncoder(w).Encode(OkDataBody(findUsr))
 }

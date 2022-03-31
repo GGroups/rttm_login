@@ -20,6 +20,15 @@ type EmptyReqRep struct {
 	Msg    string `json:"msg"`
 }
 
+type DataRep struct {
+	Status string      `json:"status"`
+	Data   interface{} `json:"data"`
+}
+
+func OkDataBody(d interface{}) DataRep {
+	return DataRep{Status: "ok", Data: d}
+}
+
 func OkBody() EmptyReqRep {
 	return EmptyReqRep{Status: "ok"}
 }

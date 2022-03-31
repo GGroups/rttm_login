@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	TIME_5 = 5
+	TIME_5 = 8
 
 	SECRET_KEY = `./key.bin`
 
