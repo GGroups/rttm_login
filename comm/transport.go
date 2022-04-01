@@ -33,15 +33,13 @@ func init() {
 	secret_bin_key = []byte(outstr)
 }
 
-func GetUserFromToken(request *http.Request, usr *USR.Usr) error {
+func GetUserFromToken(request *http.Request, usr *USR.Usr) (int, error) {
 	c, err := request.Cookie("token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			//w.WriteHeader(http.StatusUnauthorized)
-			return err
+			return http.StatusUnauthorized, err
 		}
-		//w.WriteHeader(http.StatusBadRequest)
-		return err
+		return http.StatusBadRequest, err
 	}
 	tknStr := c.Value
 
@@ -53,17 +51,14 @@ func GetUserFromToken(request *http.Request, usr *USR.Usr) error {
 	})
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
-			//w.WriteHeader(http.StatusUnauthorized)
-			return err
+			return http.StatusUnauthorized, err
 		}
-		//w.WriteHeader(http.StatusBadRequest)
-		return err
+		return http.StatusBadRequest, err
 	}
 	if !tkn.Valid {
-		//w.WriteHeader(http.StatusUnauthorized)
-		return err
+		return http.StatusUnauthorized, err
 	}
 	*usr = claims.UsrObj
 
-	return nil
+	return http.StatusOK, nil
 }

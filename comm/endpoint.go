@@ -10,6 +10,7 @@ import (
 type EmptyReqRep struct {
 	Status string `json:"status"`
 	Msg    string `json:"msg"`
+	Code   int    `json:"code"`
 }
 
 func OkBody() EmptyReqRep {
@@ -20,8 +21,8 @@ func ErrBody() EmptyReqRep {
 	return EmptyReqRep{Status: "err"}
 }
 
-func RepErr(e error) error {
-	b := EmptyReqRep{Status: "err", Msg: e.Error()}
+func RepErr(code int, e error) error {
+	b := EmptyReqRep{Status: "err", Msg: e.Error(), Code: code}
 	s, _ := json.Marshal(b)
 	return errors.New(string(s))
 }
