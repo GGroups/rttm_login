@@ -74,7 +74,7 @@ func main() {
 		log.Error("#BuildDB:", err.Error())
 	}
 	creatTestUser(&USR.Usr{Id: 100, Name: "liq", Pass: "liq2022", Roles: "1,2"})
-	creatTestUser(&USR.Usr{Id: 101, Name: "guou", Pass: "123321", Roles: "1,3"})
+	creatTestUser(&USR.Usr{Id: 101, Name: "guou", Pass: "123321", Roles: "1,3,8001"})
 	creatTestUser(&USR.Usr{Id: 102, Name: "dyc", Pass: "dyc2021", Roles: "2"})
 	creatTestRole(&USR.Role{Id: 1, Name: "添加数据字典"})
 	creatTestRole(&USR.Role{Id: 2, Name: "建表铺底语句"})
