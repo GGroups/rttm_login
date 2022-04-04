@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
+
+	UR "github.com/GGroups/rttm_login/user"
 )
 
 type EmptyReqRep struct {
@@ -30,4 +33,15 @@ func RepErr(code int, e error) error {
 func CommEncodeResponse(c context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	return json.NewEncoder(w).Encode(response)
+}
+
+func HasAccessRole(usr UR.Usr, role string) bool {
+	roles := strings.Split(usr.Roles, ",")
+	doit := false
+	for _, r := range roles {
+		if strings.TrimSpace(r) == role {
+			doit = true
+		}
+	}
+	return doit
 }
