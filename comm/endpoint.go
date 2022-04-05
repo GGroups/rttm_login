@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	UR "github.com/GGroups/rttm_login/user"
+	USR "github.com/GGroups/rttm_login/user"
+	"github.com/go-kit/kit/endpoint"
 )
 
 type EmptyReqRep struct {
@@ -18,6 +19,10 @@ type EmptyReqRep struct {
 
 func OkBody() EmptyReqRep {
 	return EmptyReqRep{Status: "ok"}
+}
+
+func OkBodyM(msg string) EmptyReqRep {
+	return EmptyReqRep{Status: "ok", Msg: msg}
 }
 
 func ErrBody() EmptyReqRep {
@@ -35,7 +40,7 @@ func CommEncodeResponse(c context.Context, w http.ResponseWriter, response inter
 	return json.NewEncoder(w).Encode(response)
 }
 
-func HasAccessRole(usr UR.Usr, role string) bool {
+func HasAccessRole(usr USR.Usr, role string) bool {
 	roles := strings.Split(usr.Roles, ",")
 	doit := false
 	for _, r := range roles {
@@ -44,4 +49,25 @@ func HasAccessRole(usr UR.Usr, role string) bool {
 		}
 	}
 	return doit
+}
+
+func MakeEndPointFilterUsr(sv USR.IUser) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		w, ok := request.(RequestWarp)
+		if !ok {
+			return ErrBody(), RepErr(http.StatusBadRequest, errors.New("请求格式错误1"))
+		}
+		r, ok := (w.Resp).(USR.ReqUsers)
+		if !ok {
+			return ErrBody(), RepErr(http.StatusBadRequest, errors.New("请求格式错误2"))
+		}
+
+		var t []USR.Usr
+		err = sv.GetUsersHasRoles(r.Roles, &t)
+		if err != nil {
+			return ErrBody(), RepErr(http.StatusBadRequest, err)
+		} else {
+			return t, nil
+		}
+	}
 }

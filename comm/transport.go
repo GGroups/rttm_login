@@ -2,6 +2,10 @@ package comm
 
 import (
 	"bufio"
+	"context"
+	"encoding/json"
+	"errors"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -12,8 +16,9 @@ import (
 )
 
 type RequestWarp struct {
-	Usr  USR.Usr     `json:"user"`
-	Resp interface{} `json:"respObj"`
+	Usr    USR.Usr     `json:"user"`
+	Resp   interface{} `json:"respObj"`
+	Cookie http.Cookie `json:"cookie"`
 }
 
 var secret_bin_key = []byte("my_secret_key")
@@ -31,6 +36,29 @@ func init() {
 		outstr += strings.TrimSpace(scanner.Text())
 	}
 	secret_bin_key = []byte(outstr)
+}
+
+func DecodeRequestFilterUsr(c context.Context, request *http.Request) (interface{}, error) {
+	if request.Method != "POST" {
+		return nil, errors.New("#must POST")
+	}
+	u := USR.Usr{}
+	errc, err := GetUserFromToken(request, &u)
+	if err != nil {
+		return nil, RepErr(errc, err)
+	}
+
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return nil, RepErr(http.StatusBadRequest, err)
+	}
+	var obj USR.ReqUsers
+	err = json.Unmarshal(body, &obj)
+	if err != nil {
+		return nil, RepErr(http.StatusBadRequest, err)
+	}
+	w := RequestWarp{Usr: u, Resp: obj}
+	return w, nil
 }
 
 func GetUserFromToken(request *http.Request, usr *USR.Usr) (int, error) {
@@ -61,4 +89,13 @@ func GetUserFromToken(request *http.Request, usr *USR.Usr) (int, error) {
 	*usr = claims.UsrObj
 
 	return http.StatusOK, nil
+}
+
+func GetTokenCookie(request *http.Request, t *http.Cookie) error {
+	tn, err := request.Cookie("token")
+	if err != nil {
+		return err
+	}
+	*t = *tn
+	return nil
 }

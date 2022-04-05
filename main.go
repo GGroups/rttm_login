@@ -8,6 +8,7 @@ import (
 	"strings"
 	"syscall"
 
+	COMM "github.com/GGroups/rttm_login/comm"
 	USR "github.com/GGroups/rttm_login/user"
 	log "github.com/cihub/seelog"
 	httpTransport "github.com/go-kit/kit/transport/http"
@@ -73,9 +74,9 @@ func main() {
 	if err != nil {
 		log.Error("#BuildDB:", err.Error())
 	}
-	creatTestUser(&USR.Usr{Id: 100, Name: "liq", Pass: "liq2022", Roles: "0101,2"})
-	creatTestUser(&USR.Usr{Id: 101, Name: "guou", Pass: "123321", Roles: "0101,3,8001"})
-	creatTestUser(&USR.Usr{Id: 102, Name: "litz", Pass: "litz2022", Roles: "0101"})
+	creatTestUser(&USR.Usr{Id: 100, Name: "liq", Pass: "liq2022", Roles: "0101,1001,1002,"})
+	creatTestUser(&USR.Usr{Id: 101, Name: "guou", Pass: "123321", Roles: "0101,1001,1002,8001,"})
+	creatTestUser(&USR.Usr{Id: 102, Name: "litz", Pass: "litz2022", Roles: "0101,"})
 	creatTestRole(&USR.Role{Id: 1, Name: "添加数据字典"})
 	creatTestRole(&USR.Role{Id: 2, Name: "建表铺底语句"})
 	creatTestRole(&USR.Role{Id: 3, Name: "导出"})
@@ -88,16 +89,19 @@ func main() {
 	ep1 := USR.MakeLoginEndPoint(us)
 	ep2 := USR.MakeLoginRefEndPoint(us)
 	ep3 := USR.MakeReloadLoginDataEndPoint(us)
+	ep4 := COMM.MakeEndPointFilterUsr(us)
 
 	svr1 := httpTransport.NewServer(ep1, USR.LoginDecodeRequest, USR.LoginEncodeResponse)
 	svr2 := httpTransport.NewServer(ep2, USR.LoginRefDecodeRequest, USR.LoginRefEncodeResponse)
 	svr3 := httpTransport.NewServer(ep3, USR.ReLoadLoginDataDecodeRequest, USR.CommEncodeResponse)
+	svr4 := httpTransport.NewServer(ep4, COMM.DecodeRequestFilterUsr, USR.CommEncodeResponse)
 
 	routeSvr := mux.NewRouter()
 
 	routeSvr.Handle(`/rttm/login/Login`, svr1).Methods("POST")
 	routeSvr.Handle(`/rttm/login/LoginRef`, svr2).Methods("POST")
 	routeSvr.Handle(`/rttm/login/LoginReload`, svr3).Methods("POST")
+	routeSvr.Handle(`/rttm/login/GetUsers`, svr4).Methods("POST")
 
 	//main loop
 	ch := make(chan error, 2)

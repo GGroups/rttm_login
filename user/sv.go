@@ -59,6 +59,7 @@ type Role struct {
 type IUser interface {
 	Login(name string, pass string, usr *Usr) error
 	LoginRef(token string) error
+	GetUsersHasRoles(acl []string, usrs *[]Usr) error
 	ReloadLoginData() error
 }
 
@@ -77,6 +78,22 @@ func (s Usr) Login(name string, pass string, usr *Usr) error {
 		*usr = findUsr
 	}
 
+	return nil
+}
+
+func (s Usr) GetUsersHasRoles(roles []string, usrs *[]Usr) error {
+	for _, u := range users {
+		var has = true
+		for _, r := range roles {
+			if !strings.Contains(u.Roles, r) {
+				has = false
+				break
+			}
+		}
+		if has {
+			*usrs = append(*usrs, u)
+		}
+	}
 	return nil
 }
 

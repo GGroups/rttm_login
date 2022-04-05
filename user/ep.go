@@ -25,6 +25,10 @@ type DataRep struct {
 	Data   interface{} `json:"data"`
 }
 
+type ReqUsers struct {
+	Roles []string `json:"roles"`
+}
+
 func OkDataBody(d interface{}) DataRep {
 	return DataRep{Status: "ok", Data: d}
 }
